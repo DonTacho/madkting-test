@@ -3,6 +3,8 @@ import axios from 'axios';
 import '../App.css';
 import settings from  '../clientAppSettings'
 
+var counter = 2
+
   const Modal = ({ handleClose, show, children }) => {
     const showHideClassName = show ? 'modal display-block' : 'modal display-none'
     return (
@@ -74,9 +76,38 @@ export default class Products extends Component {
         this.setState({ show: false });
     }
 
+    previousPage = () => {
+        axios.get(`${settings.apiUrlProducts}?page=${counter--}`,
+        { headers: { Authorization: settings.temporaryToken } }
+        )
+        .then(response => {
+            this.setState({
+                productList: response.data
+            })
+        })
+        .catch(error => {
+            console.log(error);
+        })
+      }
+      
+      nextPage = () => {
+        axios.get(`${settings.apiUrlProducts}?page=${counter++}`,
+        { headers: { Authorization: settings.temporaryToken } }
+        )
+        .then(response => {
+            this.setState({
+                productList: response.data
+            })
+        })
+        .catch(error => {
+            console.log(error);
+        })
+      }
+
     render() {
-        const productList = this.state.productList;
-        const images = this.state.images;
+        const productList = this.state.productList
+        const images = this.state.images
+        const currentPage = this.state
 
         if (productList.length > 0) {
             return(
@@ -92,7 +123,7 @@ export default class Products extends Component {
                      </tr>
                   </thead>
                   <tbody>
-                  {productList.map((product, index) => {
+                  {productList.slice((currentPage * 20), 20).map((product, index) => {
                      return (
                      <tr key={index} onClick={() => this.showModal(product)}>
                        <td>{product.sku}</td>
@@ -105,6 +136,8 @@ export default class Products extends Component {
                   })}
                   </tbody>
                 </table>
+                {counter <= 0 ? <button disabled onClick={this.previousPage}>Anterior</button> : <button onClick={this.previousPage}>Anterior</button> }
+                <button onClick={this.nextPage}>Siguiente</button>
                 <Modal show={this.state.show} handleClose={this.hideModal}>
                 <h3 className='detail-Title'><strong>Detalles del Producto</strong></h3>
                 <p><strong>Id:</strong> {this.state.sku}</p>
